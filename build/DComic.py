@@ -19,34 +19,34 @@ def download_file(url):
     return getreq.status_code
 
 def makePdf(pdfFileName, listPages, dir = ''):
-    if (dir):
-        dir += "\\"
+    # if (dir):
+    #     dir += "\\"
     mwidth = 0
     mheight = 0
 
 
     for page in listPages:
         try:
-            cover = Image.open(dir + str(page.split('/')[-1]).split('.')[0]+".jpg")
+            cover = Image.open(os.path.join(dir, str(page.split('/')[-1]).split('.')[0]+".jpg"))
             width, height = cover.size
             if(width > mwidth):
                 mwidth = width
             if(height > mheight):
                 mheight = height
         except Exception as e:
-            pass
-            # print(e)
+            # pass
+            print(e)
         # print(dir + str(page.split('/')[-1])) Debut
     pdf = FPDF(unit = "pt", format = [mwidth, mheight])
     # print(listPages)
     for page in listPages:
         try:
             pdf.add_page()
-            pdf.image(dir + str(page.split('/')[-1].split('.')[0]+".jpg"), 0, 0)
+            pdf.image(os.path.join(dir, str(page.split('/')[-1].split('.')[0]+".jpg")), 0, 0)
         except Exception as e:
-            pass
-            # print(e)
-    pdf.output(dir + pdfFileName + ".pdf", "F")
+            # pass
+            print(e)
+    pdf.output(os.path.join(dir, pdfFileName) + ".pdf", "F")
 
 #Argument -p path -u url -l listurl -h help
 PATH = os.getcwd()
@@ -106,7 +106,11 @@ while (True):
     path = input("Nhập đường dẫn lưu truyện: ")
     if(path!=""):
         break
-
+extension = ""
+while (True):
+    extension = input("Bạn muốn lưu truyện ở dạng nào:(1-img, 2-pdf, 3-img,pdf) :")
+    if( extension == "1" or extension == "2" or extension == "3"):
+        break
 
 if (path==""):
     print("Error: not found the path")
@@ -145,16 +149,15 @@ for url in urls:
     if (req.status_code == 200):
         soup = BeautifulSoup(req.text, 'lxml')
     elements = soup.find_all("img")
-
     imgs=[]
     try:
         for element in elements:
-            if(element['src'].find("jpg")!=-1 or element['src'].find("png")!=-1 or element['src'].find("webp")!=-1):
-                if(element['src'].find("http")!=-1):
+            if(element['src'].find("jpg")!=-1 or element['src'].find("png")!=-1 or element['src'].find("webp")!=-1  or element['src'].find("jpeg")!=-1):
+                if(element['src'].find("http")!=-1 or element['src'].find("s.fanfox.net")!=-1):
                     imgs.append(element['src'].rstrip("\r\n"))
     except Exception as e:
         print(e)
-        
+    
     #Download mutilthread
 
     # with ThreadPoolExecutor(max_workers=12) as executor:
@@ -185,30 +188,46 @@ for url in urls:
 
     #Creative folder and Move images to folder
     nameFilePdf = strftime("%Y%m%d%H%M%S", gmtime())
-
-    # try:
-    #     print("Creativing folder...")
-    #     os.mkdir(path+r"/"+namefolder)
-    # except:
-    #     print("Error: Not creative folder " + namefolder)
-    #     pass
-    
-    print("Creativing PDF...")
+    namefolder = nameFilePdf
     try:
-        makePdf(nameFilePdf, imgs, PATH)
-    except Exception as e:
-        print(e)
+        print("Creativing folder...")
+        os.mkdir(os.path.join(path,namefolder))
+    except:
+        print("Folder " + namefolder + " was existed")
+        pass
 
-    print("Moving PDF...")
-    try:
-        shutil.move(os.path.join(PATH,nameFilePdf+".pdf"), os.path.join(path,nameFilePdf+".pdf"))
-    except Exception as e:
-        print(e)
-    print("Removing Images...")
-    for img in imgs:
+    if(extension == "2" or extension == "3"):
+        
+        print("Creativing PDF...")
         try:
-            os.remove(os.path.join(PATH, img.split("/")[-1].split('.')[0]+".jpg"))
+            makePdf(nameFilePdf, imgs, PATH)
         except Exception as e:
             print(e)
 
+        print("Moving PDF...")
+        try:
+            shutil.move(os.path.join(PATH,nameFilePdf+".pdf"), os.path.join(path,nameFilePdf+".pdf"))
+        except Exception as e:
+            print(e)
+    
+    if(extension == "1" or extension == "3"):
+        print("Moving IMG...")
+        for img in imgs:
+            try:
+                shutil.move(os.path.join(PATH, img.split("/")[-1].split('.')[0]+".jpg"), os.path.join(path,namefolder, img.split("/")[-1].split('.')[0]+".jpg"))
+            except Exception as e:
+                print(e)
+
+    if(extension == "2"):
+        print("Removing Images...")
+        for img in imgs:
+            try:
+                os.remove(os.path.join(PATH, img.split("/")[-1].split('.')[0]+".jpg"))
+            except Exception as e:
+                print(e)
+
 print("Done...")
+
+
+
+

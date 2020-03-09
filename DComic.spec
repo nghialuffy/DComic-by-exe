@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['DComic.py'],
-             pathex=['E:\\Python\\DComic\\DComic'],
+             pathex=['/media/nghialuffy/CODE/Python/DComic/DComic'],
              binaries=[],
              datas=[],
              hiddenimports=[],
